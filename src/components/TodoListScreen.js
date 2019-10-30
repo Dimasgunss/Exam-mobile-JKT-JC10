@@ -50,6 +50,22 @@ const TodoListScreen = props => {
         })
     }
 
+    const finishedTodo = (todoId) => {
+        firebase.database().ref(`/${todoId}`).update({
+            dateCompleted: new Date().toLocaleDateString('id-ID'),
+            status: 'finished'
+        })
+        .then(()=> {
+            firebase.database().ref('/').on('value', snapshot => {
+                dispatch({
+                    type: 'FILL_TODO',
+                    payload: Object.values(snapshot.val())
+                })
+            })
+        })
+    }
+
+    // console.log(props)
 
     return (
         <Container>
@@ -59,7 +75,8 @@ const TodoListScreen = props => {
             <Card >
                     <CardItem style={{ backgroundColor: 'navy' }} header>
                         <View style={{ width: '90%', borderBottomColor: 'white', borderBottomWidth: 1, paddingVertical: 10, marginLeft: '5%' }}>
-                            <TextInput style={{ fontSize: 16, color: 'white' }} placeholderTextColor='white' placeholder="What do you wanna do?" onChangeText={text => dispatch({
+                            <TextInput style={{ fontSize: 16, color: 'white' }} placeholderTextColor='white' placeholder="What do you wanna do?"
+                            onChangeText={text => dispatch({
                                 type: 'TODO_INPUT',
                                 payload: text
                             })} />
@@ -79,15 +96,30 @@ const TodoListScreen = props => {
                     return (
                     <ListItem>
                         <Left>
-                            <Button info style={{ padding: 10 }}>
-                                <Text style={{ color: 'white'}}>{item.status}</Text>
-                            </Button> 
+                            { 
+                                item.status == 'unfinished'
+                                ?
+                                <Button info style={{ padding: 10 }}
+                                onPress={ () => finishedTodo(item.id) }>
+                                    <Text style={{ color: 'white'}}>{item.status}</Text>
+                                </Button> 
+                                :
+                                <Button success style={{ padding: 10 }}>
+                                    <Text style={{ color: 'white' }}>{item.status}</Text>
+                                </Button>
+                             }
+                           
                         </Left>
                         <Body>
                             <Text>{item.todo}</Text>
                         </Body>
                         <Right style={{ width: '100%'}}>
-                            <TouchableOpacity>
+                            <TouchableOpacity 
+                            onPress={ () => {
+                                props.navigation.navigate('TodoDetailScreen', {
+                                    item: item
+                                })
+                            }  } >
                                 <Text style={{ color: 'lightblue'}}>Open</Text>
                             </TouchableOpacity>
                         </Right>
